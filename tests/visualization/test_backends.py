@@ -150,6 +150,28 @@ def test_matplotlib_backend_collects_tuple_markers_without_flattening():
     assert list(data["marker"]) == [(3, 0, 0), (3, 0, 0)]
 
 
+def test_matplotlib_backend_keeps_zero_size():
+    """A size of 0 is kept; only a missing size (None) falls back to the default."""
+    mb = MatplotlibBackend(space_drawer=MagicMock())
+
+    class DummyAgent:
+        position = (0, 0)
+        cell = types.SimpleNamespace(coordinate=(0, 0))
+
+        def __init__(self, size):
+            self.size = size
+
+    class DummySpace:
+        agents: ClassVar[list] = [DummyAgent(0), DummyAgent(None), DummyAgent(30)]
+
+    def agent_portrayal(agent):
+        return AgentPortrayalStyle(size=agent.size)
+
+    data = mb.collect_agent_data(DummySpace(), agent_portrayal, default_size=324)
+
+    assert data["s"].tolist() == [0, 324, 30]
+
+
 def test_matplotlib_backend_draw_agents():
     """Test drawing agents."""
     mb = MatplotlibBackend(space_drawer=MagicMock())
